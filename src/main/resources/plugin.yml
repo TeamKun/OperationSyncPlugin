@@ -1,0 +1,16 @@
+name: Operationsyncplugin
+version: ${project.version}
+main: com.github.sosupe.operationsyncplugin.Operationsyncplugin
+api-version: 1.15
+description: 操作シンクロプラグイン
+
+commands:
+  sync:
+    description: Operationsync Plugin commands
+    usage: /sync <off|all|add|king>
+    aliases: o1
+    permission: sync.manage
+permissions:
+  sync.manage:
+    description: operation sync
+    default: op
