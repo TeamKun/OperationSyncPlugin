@@ -8,7 +8,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -25,15 +27,95 @@ public class EventListener implements Listener {
     private long lastTime2;
     private long lastTime3;
 
-    @EventHandler
-    public void onPlayerToggleSneakEvent(PlayerToggleSneakEvent event){
-        Player player=event.getPlayer();
-        if(event.isSneaking()){
-            player.sendMessage("スニーク");
-        }
 
+    @EventHandler
+    public void SwapHandItemchange(PlayerSwapHandItemsEvent event){
+        if(Operationsyncplugin.INSTANCE.mode==1){
+            return;
+        }
+        if(Operationsyncplugin.INSTANCE.king==null){
+            return;
+        }
+        Player player= event.getPlayer();
+        String name=player.getName();
+        if(Operationsyncplugin.INSTANCE.mode==2){
+            if(Objects.equals(name,Operationsyncplugin.INSTANCE.king)){
+                for(Player p:Bukkit.getOnlinePlayers()){
+                    if(Objects.equals(p,player)){
+                        continue;
+                    }
+                    ItemStack item2=p.getInventory().getItemInOffHand();
+                    ItemStack item1=p.getInventory().getItemInMainHand();
+                    p.getInventory().setItemInOffHand(item1);
+                    p.getInventory().setItemInMainHand(item2);
+                }
+            }
+            else{
+                ItemStack item2=player.getInventory().getItemInOffHand();
+                ItemStack item1=player.getInventory().getItemInMainHand();
+                player.getInventory().setItemInOffHand(item2);
+                player.getInventory().setItemInMainHand(item1);
+            }
+        }
+        if(Operationsyncplugin.INSTANCE.mode==3){
+            if(Objects.equals(name,Operationsyncplugin.INSTANCE.king)){
+                for(Player p:Bukkit.getOnlinePlayers()){
+                    if(Objects.equals(p,player)){
+                        continue;
+                    }
+                    ItemStack item2=p.getInventory().getItemInOffHand();
+                    ItemStack item1=p.getInventory().getItemInMainHand();
+                    p.getInventory().setItemInOffHand(item1);
+                    p.getInventory().setItemInMainHand(item2);
+                }
+            }
+            else{
+                //たぶんいらない
+            }
+        }
     }
 
+    @EventHandler
+    public void Inventoryslotchange(PlayerItemHeldEvent event){
+        if(Operationsyncplugin.INSTANCE.mode==1){
+            return;
+        }
+        if(Operationsyncplugin.INSTANCE.king==null){
+            return;
+        }
+        Player player=event.getPlayer();
+        String name=player.getName();
+        if(Operationsyncplugin.INSTANCE.mode==2){
+            //kingスロット変更
+            if(Objects.equals(name,Operationsyncplugin.INSTANCE.king)){
+                for(Player p:Bukkit.getOnlinePlayers()){
+                    if(Objects.equals(p,player)){
+                        continue;
+                    }
+                    p.getInventory().setHeldItemSlot(event.getNewSlot());
+                }
+            }
+            //king以外
+            else{
+                player.getInventory().setHeldItemSlot(event.getPreviousSlot());
+            }
+        }
+        if(Operationsyncplugin.INSTANCE.mode==3){
+            //kingスロット変更
+            if(Objects.equals(name,Operationsyncplugin.INSTANCE.king)){
+                for(Player p:Bukkit.getOnlinePlayers()){
+                    if(Objects.equals(p,player)){
+                        continue;
+                    }
+                    p.getInventory().setHeldItemSlot(event.getNewSlot());
+                }
+            }
+            //king以外
+            else{
+                //たぶんいらない,たぶんね
+            }
+        }
+    }
 
     @EventHandler
     public void onMove(PlayerMoveEvent event){
