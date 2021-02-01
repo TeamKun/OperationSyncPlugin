@@ -8,8 +8,10 @@
 # 仕様
 ## /sync king <Player>
   シンクロの中心プレイヤーの設定
-## /sync off
-  シンクロを完全OFF
+## /sync activate
+  シンクロを有効化
+## /sync inactivate
+  シンクロを無効化
 ## /sync all
   シンクロを完全同期
   シンクロされる側は動けません
