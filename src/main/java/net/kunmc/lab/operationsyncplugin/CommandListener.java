@@ -69,13 +69,14 @@ public class CommandListener implements CommandExecutor, TabCompleter {
                 break;
             case "status":
                 sender.sendMessage(new StringBuilder()
-                        .append(ChatColor.RED)
-                        .append(String.format("状態: %s", operationsyncplugin.isActive() ? "起動中" : "停止中"))
+                        .append(String.format("状態: %s", operationsyncplugin.isActive() ? ChatColor.GREEN + "起動中" : ChatColor.RED + "停止中"))
                         .append("\n")
-                        .append(String.format("同期元プレイヤー: %s", operationsyncplugin.getKing().getName()))
+                        .append(String.format(ChatColor.RESET + "同期元プレイヤー: %s", operationsyncplugin.getKing() == null ? ChatColor.RED + "未設定" : operationsyncplugin.getKing().getName()))
                         .toString());
+                break;
             default:
                 sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("無効な引数です！").toString());
+                break;
         }
 
         return true;

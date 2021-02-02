@@ -11,6 +11,8 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -70,6 +72,42 @@ public class EventListener implements Listener {
             return;
         }
         Bukkit.getOnlinePlayers().forEach(player -> player.getInventory().setHeldItemSlot(event.getNewSlot()));
+    }
+
+    @EventHandler
+    public void onDrop(PlayerDropItemEvent event) {
+        if (!operationsyncplugin.isActive()) {
+            return;
+        }
+        if (operationsyncplugin.getKing() == null){
+            return;
+        }
+        Player king = event.getPlayer();
+        if (!king.equals(operationsyncplugin.getKing())) {
+            return;
+        }
+        int amount = event.getItemDrop().getItemStack().getAmount();
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            if (player.equals(king)) {
+                return;
+            }
+            ItemStack itemStack = player.getItemInHand();
+            if (itemStack.getType().equals(Material.AIR)) {
+                return;
+            }
+            ItemStack clone = itemStack.clone();
+            clone.setAmount(Math.min(itemStack.getAmount(), amount));
+            Item item = player.getWorld().dropItem(player.getLocation(), clone);
+            item.setPickupDelay(30);
+            double yaw = player.getLocation().getYaw();
+            double pitch = player.getLocation().getPitch();
+            yaw = Math.toRadians(yaw);
+            pitch = Math.toRadians(pitch);
+            Vector vector = new Vector(Math.cos(pitch) * Math.sin(-yaw),Math.sin(- pitch),Math.cos(pitch) * Math.cos(yaw));
+            vector.multiply(0.3);
+            item.setVelocity(vector);
+            itemStack.subtract(amount);
+        });
     }
 
     @EventHandler
