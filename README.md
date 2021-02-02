@@ -12,9 +12,10 @@
   シンクロを有効化
 ## /sync inactivate
   シンクロを無効化
-## /sync all
-  シンクロを完全同期
-  シンクロされる側は動けません
-## /sync add
-  シンクロ加算モード
-  シンクロされる側は自分でも動けるが、kingが動いた場合はその動きが加算される
+## /sync status
+  シンクロの状態を取得
+  
+# 依存プラグイン
+ProtoclLib
+https://www.spigotmc.org/resources/protocollib.1997/
+
