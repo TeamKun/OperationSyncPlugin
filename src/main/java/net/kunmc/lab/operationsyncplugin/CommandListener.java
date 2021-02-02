@@ -34,51 +34,48 @@ public class CommandListener implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (args[0].equals("king")) {
-
-            if (args.length < 2) {
-                sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("プレイヤーを指定してください！").toString());
-                return true;
-            }
-            Player player = Bukkit.getPlayer(args[1]);
-            if (player == null) {
-                sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("プレイヤーが見つかりません！").toString());
-                return true;
-            }
-            operationsyncplugin.setKingID(player.getName());
-            sender.sendMessage(new StringBuilder().append(ChatColor.GREEN).append("中心のプレイヤーを ").append(player.getName()).append(" に設定しました").toString());
-
-        } else if (args[0].equals(SyncMode.ALL.getId())) {
-
-            operationsyncplugin.setSyncMode(SyncMode.ALL);
-            sender.sendMessage(new StringBuilder().append(ChatColor.GREEN).append("同期モードを ").append(SyncMode.ALL.getName()).append(" に変更しました").toString());
-
-        } else if (args[0].equals(SyncMode.ADD.getId())) {
-
-            operationsyncplugin.setSyncMode(SyncMode.ADD);
-            sender.sendMessage(new StringBuilder().append(ChatColor.GREEN).append("同期モードを ").append(SyncMode.ADD.getName()).append(" に変更しました").toString());
-
-        } else if (args[0].equals("activate")) {
-            if (operationsyncplugin.isActive()) {
-                sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("既に起動しています！").toString());
-            } else {
-                operationsyncplugin.setActive(true);
-                sender.sendMessage(new StringBuilder().append(ChatColor.GREEN).append("操作同期 開始").toString());
-                if (operationsyncplugin.getKing() == null) {
-                    sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("[注意] 中心のプレイヤーがセットされていません！").toString());
+        switch (args[0]) {
+            case "king":
+                if (args.length < 2) {
+                    sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("プレイヤーを指定してください！").toString());
+                    return true;
                 }
-            }
-
-        } else if (args[0].equals("inactivate")) {
-            if (!operationsyncplugin.isActive()) {
-                sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("まだ起動していません！").toString());
-            } else {
-                operationsyncplugin.setActive(false);
-                sender.sendMessage(new StringBuilder().append(ChatColor.GREEN).append("操作同期 停止").toString());
-            }
-
-        } else {
-            sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("無効な引数です！").toString());
+                Player player = Bukkit.getPlayer(args[1]);
+                if (player == null) {
+                    sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("プレイヤーが見つかりません！").toString());
+                    return true;
+                }
+                operationsyncplugin.setKingID(player.getName());
+                sender.sendMessage(new StringBuilder().append(ChatColor.GREEN).append("同期元のプレイヤーを ").append(player.getName()).append(" に設定しました").toString());
+                break;
+            case "activate":
+                if (operationsyncplugin.isActive()) {
+                    sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("既に起動しています！").toString());
+                } else {
+                    operationsyncplugin.setActive(true);
+                    sender.sendMessage(new StringBuilder().append(ChatColor.GREEN).append("操作同期 開始").toString());
+                    if (operationsyncplugin.getKing() == null) {
+                        sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("[注意] 同期元のプレイヤーがセットされていません！").toString());
+                    }
+                }
+                break;
+            case "inactivate":
+                if (!operationsyncplugin.isActive()) {
+                    sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("まだ起動していません！").toString());
+                } else {
+                    operationsyncplugin.setActive(false);
+                    sender.sendMessage(new StringBuilder().append(ChatColor.GREEN).append("操作同期 停止").toString());
+                }
+                break;
+            case "status":
+                sender.sendMessage(new StringBuilder()
+                        .append(ChatColor.RED)
+                        .append(String.format("状態: %s", operationsyncplugin.isActive() ? "起動中" : "停止中"))
+                        .append("\n")
+                        .append(String.format("同期元プレイヤー: %s", operationsyncplugin.getKing().getName()))
+                        .toString());
+            default:
+                sender.sendMessage(new StringBuilder().append(ChatColor.RED).append("無効な引数です！").toString());
         }
 
         return true;
@@ -91,7 +88,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
 
         switch (args.length) {
             case 1:
-                suggestions = new ArrayList<>(Arrays.asList("activate", "inactivate", "king", SyncMode.ADD.getId(), SyncMode.ALL.getId()));
+                suggestions = new ArrayList<>(Arrays.asList("activate", "inactivate", "king", "status"));
                 break;
             default:
                 break;

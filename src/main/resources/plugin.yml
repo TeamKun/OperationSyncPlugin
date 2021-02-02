@@ -3,6 +3,7 @@ version: ${project.version}
 main: net.kunmc.lab.operationsyncplugin.Operationsyncplugin
 api-version: 1.15
 description: 操作シンクロプラグイン
+depend: [ProtocolLib]
 
 commands:
   sync:

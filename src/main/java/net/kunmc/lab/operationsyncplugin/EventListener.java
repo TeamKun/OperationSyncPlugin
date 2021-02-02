@@ -11,20 +11,17 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
-import org.bukkit.event.Listener;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
 import org.bukkit.util.Vector;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.Objects;
 
 public class EventListener implements Listener {
 
@@ -36,83 +33,43 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void SwapHandItemchange(PlayerSwapHandItemsEvent event){
-        if(!operationsyncplugin.isActive()) {
+        if (!operationsyncplugin.isActive()) {
             return;
         }
-        if(operationsyncplugin.getKing() == null){
+        if (operationsyncplugin.getKing() == null){
             return;
         }
 
-        Player player= event.getPlayer();
-        if(operationsyncplugin.getSyncMode().equals(SyncMode.ALL)) {
-            if(player.equals(operationsyncplugin.getKing())){
-                for(Player p:Bukkit.getOnlinePlayers()){
-                    if(Objects.equals(p,player)){
-                        continue;
-                    }
-                    ItemStack item2=p.getInventory().getItemInOffHand();
-                    ItemStack item1=p.getInventory().getItemInMainHand();
-                    p.getInventory().setItemInOffHand(item1);
-                    p.getInventory().setItemInMainHand(item2);
+        Player player = event.getPlayer();
+        if(player.equals(operationsyncplugin.getKing())){
+            for(Player p:Bukkit.getOnlinePlayers()){
+                if(Objects.equals(p,player)){
+                    continue;
                 }
-            }
-            else{
-                ItemStack item2=player.getInventory().getItemInOffHand();
-                ItemStack item1=player.getInventory().getItemInMainHand();
-                player.getInventory().setItemInOffHand(item2);
-                player.getInventory().setItemInMainHand(item1);
+                ItemStack item2=p.getInventory().getItemInOffHand();
+                ItemStack item1=p.getInventory().getItemInMainHand();
+                p.getInventory().setItemInOffHand(item1);
+                p.getInventory().setItemInMainHand(item2);
             }
         }
-        if(operationsyncplugin.getSyncMode().equals(SyncMode.ADD)){
-            if(player.equals(operationsyncplugin.getKing())){
-                for(Player p:Bukkit.getOnlinePlayers()){
-                    if(Objects.equals(p,player)){
-                        continue;
-                    }
-                    ItemStack item2=p.getInventory().getItemInOffHand();
-                    ItemStack item1=p.getInventory().getItemInMainHand();
-                    p.getInventory().setItemInOffHand(item1);
-                    p.getInventory().setItemInMainHand(item2);
-                }
-            }
-            else{
-                //たぶんいらない
-            }
+        else{
+            //たぶんいらない
         }
     }
 
     @EventHandler
     public void onKingSlotChange(PlayerItemHeldEvent event){
-        if(!operationsyncplugin.isActive()) {
+        if (!operationsyncplugin.isActive()) {
             return;
         }
-        if(operationsyncplugin.getKing() == null){
+        if (operationsyncplugin.getKing() == null){
             return;
         }
         Player king = event.getPlayer();
         if (!king.equals(operationsyncplugin.getKing())) {
             return;
         }
-        if (operationsyncplugin.getSyncMode().equals(SyncMode.ADD)) {
-            Bukkit.getOnlinePlayers().forEach(player -> player.getInventory().setHeldItemSlot(event.getNewSlot()));
-        }
-    }
-
-    @EventHandler
-    public void onOtherSlotChange(PlayerItemHeldEvent event){
-        if(!operationsyncplugin.isActive()) {
-            return;
-        }
-        if(operationsyncplugin.getKing() == null){
-            return;
-        }
-        Player king = event.getPlayer();
-        if (king.equals(operationsyncplugin.getKing())) {
-            return;
-        }
-        if (operationsyncplugin.getSyncMode().equals(SyncMode.ALL)) {
-            event.setCancelled(true);
-        }
+        Bukkit.getOnlinePlayers().forEach(player -> player.getInventory().setHeldItemSlot(event.getNewSlot()));
     }
 
     @EventHandler
@@ -254,23 +211,6 @@ public class EventListener implements Listener {
             player.getInventory().getItemInHand().subtract();
             player.swingMainHand();
          });
-    }
-
-    @EventHandler
-    public void onOtherPlace(BlockPlaceEvent event) {
-        if (!operationsyncplugin.isActive()) {
-            return;
-        }
-        if (operationsyncplugin.getKing() == null) {
-            return;
-        }
-        Player king = event.getPlayer();
-        if (king.equals(operationsyncplugin.getKing())) {
-            return;
-        }
-        if (operationsyncplugin.getSyncMode().equals(SyncMode.ALL)) {
-            event.setCancelled(true);
-        }
     }
 
     @EventHandler
