@@ -12,6 +12,7 @@ public final class Operationsyncplugin extends JavaPlugin {
     private ProtocolManager protocolManager;
 
     private boolean active = false;
+    private boolean syncView = false;
     private String king = "";
 
     @Override
@@ -46,5 +47,13 @@ public final class Operationsyncplugin extends JavaPlugin {
 
     public ProtocolManager getProtocolManager() {
         return protocolManager;
+    }
+
+    public boolean getSyncView() {
+        return syncView;
+    }
+
+    public void setSyncView(boolean syncView) {
+        this.syncView = syncView;
     }
 }

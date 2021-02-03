@@ -14,6 +14,10 @@
   シンクロを無効化
 ## /sync status
   シンクロの状態を取得
+## /sync onSyncView
+  視点の同期を有効化
+## /sync offSyncView
+  視点の同期を無効化  
   
 # 依存プラグイン
 ProtoclLib

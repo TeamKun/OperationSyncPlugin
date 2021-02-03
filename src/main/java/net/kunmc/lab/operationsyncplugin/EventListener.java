@@ -133,6 +133,9 @@ public class EventListener implements Listener {
                     .multiply(0.7);
             player.setVelocity(player.getVelocity().add(locDif));
 
+            if (!operationsyncplugin.getSyncView()) {
+                return;
+            }
             float yawDif = event.getTo().getYaw() - event.getFrom().getYaw();
             float pitchDif = event.getTo().getPitch() - event.getFrom().getPitch();
             Location location = player.getLocation();
