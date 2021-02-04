@@ -105,7 +105,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
 
         switch (args.length) {
             case 1:
-                suggestions = new ArrayList<>(Arrays.asList("activate", "inactivate", "king", "status", "onSyncView", "offSyncView"));
+                suggestions = new ArrayList<>(Arrays.asList("activate", "inactivate", "king", "status", "onSyncView", "offSyncView")).stream().filter(s -> s.contains(args[0])).collect(Collectors.toList());
                 break;
             default:
                 break;
