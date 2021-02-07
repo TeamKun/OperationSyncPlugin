@@ -4,6 +4,7 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -22,7 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Objects;
 
 public class EventListener implements Listener {
 
@@ -32,74 +32,94 @@ public class EventListener implements Listener {
         this.operationsyncplugin = plugin;
     }
 
-    @EventHandler
-    public void SwapHandItemchange(PlayerSwapHandItemsEvent event){
+    private boolean shouldHandle(Player player) {
         if (!operationsyncplugin.isActive()) {
-            return;
+            return false;
         }
-        if (operationsyncplugin.getKing() == null){
-            return;
+        if (operationsyncplugin.getKings().isEmpty()){
+            return false;
         }
+        if (player.getGameMode().equals(GameMode.SPECTATOR)) {
+            return false;
+        }
+        return true;
+    }
 
+    private boolean shouldSync(Player player) {
+        if (isKing(player)) {
+            return false;
+        }
+        if (player.getGameMode().equals(GameMode.SPECTATOR)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isKing(Player player) {
+        return operationsyncplugin.getKings().contains(player);
+    }
+
+    @EventHandler
+    public void onKingSwapHandItemchange(PlayerSwapHandItemsEvent event) {
         Player player = event.getPlayer();
-        if(player.equals(operationsyncplugin.getKing())){
-            for(Player p:Bukkit.getOnlinePlayers()){
-                if(Objects.equals(p,player)){
-                    continue;
-                }
-                ItemStack item2=p.getInventory().getItemInOffHand();
-                ItemStack item1=p.getInventory().getItemInMainHand();
-                p.getInventory().setItemInOffHand(item1);
-                p.getInventory().setItemInMainHand(item2);
+        if (!shouldHandle(player)) {
+            return;
+        }
+        if (!isKing(player)) {
+            return;
+        }
+        Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
+            if (!shouldSync(otherPlayer)) {
+                return;
             }
-        }
-        else{
-            //たぶんいらない
-        }
+            ItemStack item2 = otherPlayer.getInventory().getItemInOffHand();
+            ItemStack item1 = otherPlayer.getInventory().getItemInMainHand();
+            otherPlayer.getInventory().setItemInOffHand(item1);
+            otherPlayer.getInventory().setItemInMainHand(item2);
+        });
     }
 
     @EventHandler
     public void onKingSlotChange(PlayerItemHeldEvent event){
-        if (!operationsyncplugin.isActive()) {
+        Player player = event.getPlayer();
+        if (!shouldHandle(player)) {
             return;
         }
-        if (operationsyncplugin.getKing() == null){
+        if (!isKing(player)) {
             return;
         }
-        Player king = event.getPlayer();
-        if (!king.equals(operationsyncplugin.getKing())) {
-            return;
-        }
-        Bukkit.getOnlinePlayers().forEach(player -> player.getInventory().setHeldItemSlot(event.getNewSlot()));
+        Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
+            if (!shouldSync(otherPlayer)) {
+                return;
+            }
+            otherPlayer.getInventory().setHeldItemSlot(event.getNewSlot());
+        });
     }
 
     @EventHandler
-    public void onDrop(PlayerDropItemEvent event) {
-        if (!operationsyncplugin.isActive()) {
+    public void onKingDrop(PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        if (!shouldHandle(player)) {
             return;
         }
-        if (operationsyncplugin.getKing() == null){
-            return;
-        }
-        Player king = event.getPlayer();
-        if (!king.equals(operationsyncplugin.getKing())) {
+        if (!isKing(player)) {
             return;
         }
         int amount = event.getItemDrop().getItemStack().getAmount();
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            if (player.equals(king)) {
+        Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
+            if (!shouldSync(otherPlayer)) {
                 return;
             }
-            ItemStack itemStack = player.getItemInHand();
+            ItemStack itemStack = otherPlayer.getItemInHand();
             if (itemStack.getType().equals(Material.AIR)) {
                 return;
             }
             ItemStack clone = itemStack.clone();
             clone.setAmount(Math.min(itemStack.getAmount(), amount));
-            Item item = player.getWorld().dropItem(player.getLocation(), clone);
+            Item item = otherPlayer.getWorld().dropItem(otherPlayer.getLocation(), clone);
             item.setPickupDelay(30);
-            double yaw = player.getLocation().getYaw();
-            double pitch = player.getLocation().getPitch();
+            double yaw = otherPlayer.getLocation().getYaw();
+            double pitch = otherPlayer.getLocation().getPitch();
             yaw = Math.toRadians(yaw);
             pitch = Math.toRadians(pitch);
             Vector vector = new Vector(Math.cos(pitch) * Math.sin(-yaw),Math.sin(- pitch),Math.cos(pitch) * Math.cos(yaw));
@@ -111,56 +131,50 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onKingMoveParallel(PlayerMoveEvent event) {
-        if (!operationsyncplugin.isActive()) {
+        Player player = event.getPlayer();
+        if (!shouldHandle(player)) {
             return;
         }
-        if (operationsyncplugin.getKing() == null) {
+        if (!isKing(player)) {
             return;
         }
-        Player king = event.getPlayer();
-        if (!king.equals(operationsyncplugin.getKing())) {
-            return;
-        }
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            if (player.equals(king)) {
+        Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
+            if (!shouldSync(otherPlayer)) {
                 return;
             }
             Vector locDif = event.getTo().toVector().subtract(event.getFrom().toVector());
-            locDif.rotateAroundY(Math.toRadians((event.getFrom().getYaw() - player.getLocation().getYaw())))
+            locDif.rotateAroundY(Math.toRadians((event.getFrom().getYaw() - otherPlayer.getLocation().getYaw())))
                     .setY(0)
-                    .setX(locDif.getX() * player.getVelocity().getX() < 0 || Math.abs(locDif.getX()) > Math.abs(player.getVelocity().getX()) ? locDif.getX() : 0)
-                    .setZ(locDif.getZ() * player.getVelocity().getZ() < 0 || Math.abs(locDif.getZ()) > Math.abs(player.getVelocity().getZ()) ? locDif.getZ() : 0)
+                    .setX(locDif.getX() * otherPlayer.getVelocity().getX() < 0 || Math.abs(locDif.getX()) > Math.abs(otherPlayer.getVelocity().getX()) ? locDif.getX() : 0)
+                    .setZ(locDif.getZ() * otherPlayer.getVelocity().getZ() < 0 || Math.abs(locDif.getZ()) > Math.abs(otherPlayer.getVelocity().getZ()) ? locDif.getZ() : 0)
                     .multiply(0.7);
-            player.setVelocity(player.getVelocity().add(locDif));
+            otherPlayer.setVelocity(otherPlayer.getVelocity().add(locDif));
 
             if (!operationsyncplugin.getSyncView()) {
                 return;
             }
             float yawDif = event.getTo().getYaw() - event.getFrom().getYaw();
             float pitchDif = event.getTo().getPitch() - event.getFrom().getPitch();
-            Location location = player.getLocation();
+            Location location = otherPlayer.getLocation();
             location.setYaw(location.getYaw() + yawDif);
             location.setPitch(location.getPitch() + pitchDif);
             if (yawDif == 0 || pitchDif == 0) {
                 return;
             }
-            player.teleport(location);
+            otherPlayer.teleport(location);
         });
     }
 
     @EventHandler
     public void onKingJump(PlayerMoveEvent event) {
-        if (!operationsyncplugin.isActive()) {
+        Player player = event.getPlayer();
+        if (!shouldHandle(player)) {
             return;
         }
-        if (operationsyncplugin.getKing() == null) {
+        if (!isKing(player)) {
             return;
         }
-        Player king = event.getPlayer();
-        if (!king.equals(operationsyncplugin.getKing())) {
-            return;
-        }
-        if (king.isJumping()) {
+        if (player.isJumping()) {
             return;
         }
         Location from = event.getFrom();
@@ -168,21 +182,21 @@ public class EventListener implements Listener {
         if (from.getY() >= to.getY()) {
             return;
         }
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            if (player.equals(king)) {
+        Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
+            if (!shouldSync(otherPlayer)) {
                 return;
             }
-            if (!player.isOnGround()) {
+            if (!otherPlayer.isOnGround()) {
                 return;
             }
-            if (player.isJumping()) {
+            if (otherPlayer.isJumping()) {
                 return;
             }
-            if (player.getVelocity().getY() > 0) {
+            if (otherPlayer.getVelocity().getY() > 0) {
                 return;
             }
-            Vector pVec = player.getVelocity();
-            player.setVelocity(pVec.add(new Vector(0, 0.5, 0)));
+            Vector pVec = otherPlayer.getVelocity();
+            otherPlayer.setVelocity(pVec.add(new Vector(0, 0.5, 0)));
         });
     }
 
@@ -191,29 +205,26 @@ public class EventListener implements Listener {
         if (!(event.getAction().equals(Action.LEFT_CLICK_AIR) || event.getAction().equals(Action.LEFT_CLICK_BLOCK))) {
             return;
         }
-        if (!operationsyncplugin.isActive()) {
+        Player player = event.getPlayer();
+        if (!shouldHandle(player)) {
             return;
         }
-        if (operationsyncplugin.getKing() == null) {
-            return;
-        }
-        Player king = event.getPlayer();
-        if (!king.equals(operationsyncplugin.getKing())) {
+        if (!isKing(player)) {
             return;
         }
         if (!event.getHand().equals(EquipmentSlot.HAND)) {
             return;
         }
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            if (player.equals(king)) {
+        Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
+            if (!shouldSync(otherPlayer)) {
                 return;
             }
-            player.swingMainHand();
-            Entity entity = player.getTargetEntity(4, false);
+            otherPlayer.swingMainHand();
+            Entity entity = otherPlayer.getTargetEntity(4, false);
             if (entity == null) {
                 return;
             }
-            ((CraftPlayer) player).getHandle().attack(((CraftEntity) entity).getHandle());
+            ((CraftPlayer) otherPlayer).getHandle().attack(((CraftEntity) entity).getHandle());
         });
     }
 
@@ -222,59 +233,53 @@ public class EventListener implements Listener {
         if (!(event.getAction().equals(Action.RIGHT_CLICK_BLOCK) || event.getAction().equals(Action.RIGHT_CLICK_AIR))) {
             return;
         }
-        if (!operationsyncplugin.isActive()) {
+        Player player = event.getPlayer();
+        if (!shouldHandle(player)) {
             return;
         }
-        if (operationsyncplugin.getKing() == null) {
-            return;
-        }
-        Player king = event.getPlayer();
-        if (!king.equals(operationsyncplugin.getKing())) {
+        if (!isKing(player)) {
             return;
         }
         if (!event.getHand().equals(EquipmentSlot.HAND)) {
             return;
         }
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            if (player.equals(king)) {
+        Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
+            if (!shouldSync(otherPlayer)) {
                 return;
             }
-            if (!player.getItemInHand().getType().isBlock()) {
+            if (!otherPlayer.getItemInHand().getType().isBlock()) {
                 return;
             }
-            Block block = player.getTargetBlock(4);
+            Block block = otherPlayer.getTargetBlock(4);
             if (block.getType().equals(Material.AIR)) {
                 return;
             }
-            BlockFace blockFace = player.getTargetBlockFace(4);
-            block.getLocation().clone().add(blockFace.getDirection()).getBlock().setType(player.getItemInHand().getType());
-            player.getInventory().getItemInHand().subtract();
-            player.swingMainHand();
+            BlockFace blockFace = otherPlayer.getTargetBlockFace(4);
+            block.getLocation().clone().add(blockFace.getDirection()).getBlock().setType(otherPlayer.getItemInHand().getType());
+            otherPlayer.getInventory().getItemInHand().subtract();
+            otherPlayer.swingMainHand();
          });
     }
 
     @EventHandler
     public void onKingSneak(PlayerToggleSneakEvent event) {
-        if (!operationsyncplugin.isActive()) {
+        Player player = event.getPlayer();
+        if (!shouldHandle(player)) {
             return;
         }
-        if (operationsyncplugin.getKing() == null) {
+        if (!isKing(player)) {
             return;
         }
-        Player king = event.getPlayer();
-        if (!king.equals(operationsyncplugin.getKing())) {
-            return;
-        }
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            if (player.equals(king)) {
+        Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
+            if (!shouldSync(otherPlayer)) {
                 return;
             }
             if (event.isSneaking()) {
                 PacketContainer packetContainer = operationsyncplugin.getProtocolManager().createPacket(PacketType.Play.Client.ENTITY_ACTION);
                 packetContainer.getPlayerActions().write(0, EnumWrappers.PlayerAction.START_SNEAKING);
-                packetContainer.getIntegers().write(0, player.getEntityId());
+                packetContainer.getIntegers().write(0, otherPlayer.getEntityId());
                 try {
-                    operationsyncplugin.getProtocolManager().recieveClientPacket(player, packetContainer);
+                    operationsyncplugin.getProtocolManager().recieveClientPacket(otherPlayer, packetContainer);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 } catch (InvocationTargetException e) {
@@ -283,9 +288,9 @@ public class EventListener implements Listener {
             } else {
                 PacketContainer packetContainer = operationsyncplugin.getProtocolManager().createPacket(PacketType.Play.Client.ENTITY_ACTION);
                 packetContainer.getPlayerActions().write(0, EnumWrappers.PlayerAction.STOP_SNEAKING);
-                packetContainer.getIntegers().write(0, player.getEntityId());
+                packetContainer.getIntegers().write(0, otherPlayer.getEntityId());
                 try {
-                    operationsyncplugin.getProtocolManager().recieveClientPacket(player, packetContainer);
+                    operationsyncplugin.getProtocolManager().recieveClientPacket(otherPlayer, packetContainer);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 } catch (InvocationTargetException e) {
@@ -298,26 +303,23 @@ public class EventListener implements Listener {
 
     @EventHandler
     public void onKingSprint(PlayerToggleSprintEvent event) {
-        if (!operationsyncplugin.isActive()) {
+        Player player = event.getPlayer();
+        if (!shouldHandle(player)) {
             return;
         }
-        if (operationsyncplugin.getKing() == null) {
+        if (!isKing(player)) {
             return;
         }
-        Player king = event.getPlayer();
-        if (!king.equals(operationsyncplugin.getKing())) {
-            return;
-        }
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            if (player.equals(king)) {
+        Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
+            if (!shouldSync(otherPlayer)) {
                 return;
             }
             if (event.isSprinting()) {
                 PacketContainer packetContainer = operationsyncplugin.getProtocolManager().createPacket(PacketType.Play.Client.ENTITY_ACTION);
                 packetContainer.getPlayerActions().write(0, EnumWrappers.PlayerAction.START_SPRINTING);
-                packetContainer.getIntegers().write(0, player.getEntityId());
+                packetContainer.getIntegers().write(0, otherPlayer.getEntityId());
                 try {
-                    operationsyncplugin.getProtocolManager().recieveClientPacket(player, packetContainer);
+                    operationsyncplugin.getProtocolManager().recieveClientPacket(otherPlayer, packetContainer);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 } catch (InvocationTargetException e) {
@@ -326,9 +328,9 @@ public class EventListener implements Listener {
             } else {
                 PacketContainer packetContainer = operationsyncplugin.getProtocolManager().createPacket(PacketType.Play.Client.ENTITY_ACTION);
                 packetContainer.getPlayerActions().write(0, EnumWrappers.PlayerAction.STOP_SPRINTING);
-                packetContainer.getIntegers().write(0, player.getEntityId());
+                packetContainer.getIntegers().write(0, otherPlayer.getEntityId());
                 try {
-                    operationsyncplugin.getProtocolManager().recieveClientPacket(player, packetContainer);
+                    operationsyncplugin.getProtocolManager().recieveClientPacket(otherPlayer, packetContainer);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 } catch (InvocationTargetException e) {

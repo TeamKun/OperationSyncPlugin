@@ -7,6 +7,7 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.InvocationTargetException;
@@ -26,11 +27,14 @@ public class PacketListener extends PacketAdapter {
             if (!operationsyncplugin.isActive()) {
                 return;
             }
-            if (operationsyncplugin.getKing() == null) {
+            if (operationsyncplugin.getKings().isEmpty()) {
                 return;
             }
             Player king = event.getPlayer();
-            if (!king.equals(operationsyncplugin.getKing())) {
+            if (king.getGameMode().equals(GameMode.SPECTATOR)) {
+                return;
+            }
+            if (!operationsyncplugin.getKings().contains(king)) {
                 return;
             }
             PacketContainer packet = event.getPacket();
@@ -40,7 +44,10 @@ public class PacketListener extends PacketAdapter {
                 case STOP_DESTROY_BLOCK:
                 case ABORT_DESTROY_BLOCK:
                     Bukkit.getOnlinePlayers().forEach(player -> {
-                        if (player.equals(king)) {
+                        if (player.getGameMode().equals(GameMode.SPECTATOR)) {
+                            return;
+                        }
+                        if (operationsyncplugin.getKings().contains(player)) {
                             return;
                         }
                         PacketContainer packetContainer = operationsyncplugin.getProtocolManager().createPacket(PacketType.Play.Client.BLOCK_DIG);
