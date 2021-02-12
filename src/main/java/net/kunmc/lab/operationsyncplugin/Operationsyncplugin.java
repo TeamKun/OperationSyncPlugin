@@ -3,8 +3,10 @@ package net.kunmc.lab.operationsyncplugin;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Team;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +19,6 @@ public final class Operationsyncplugin extends JavaPlugin {
 
     private boolean active = false;
     private boolean syncView = false;
-    private String king = "";
     private List<String> kings = new ArrayList<>();
 
     @Override
@@ -60,5 +61,27 @@ public final class Operationsyncplugin extends JavaPlugin {
 
     public void setSyncView(boolean syncView) {
         this.syncView = syncView;
+    }
+
+    public boolean shouldSync(Player player, Player king) {
+        if (isKing(player)) {
+            return false;
+        }
+        if (player.getGameMode().equals(GameMode.SPECTATOR)) {
+            return false;
+        }
+        Team team = king.getScoreboard().getEntryTeam(king.getName());
+        if (team == null) {
+            return true;
+        }
+        Team team1 = player.getScoreboard().getEntryTeam(player.getName());
+        if (!team.equals(team1)) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isKing(Player player) {
+        return getKings().contains(player);
     }
 }

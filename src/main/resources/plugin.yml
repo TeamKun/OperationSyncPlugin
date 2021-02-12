@@ -8,7 +8,6 @@ depend: [ProtocolLib]
 commands:
   sync:
     description: Operationsync Plugin commands
-    aliases: o1
     permission: sync.manage
 permissions:
   sync.manage:

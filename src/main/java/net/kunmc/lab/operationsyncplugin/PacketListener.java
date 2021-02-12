@@ -47,7 +47,10 @@ public class PacketListener extends PacketAdapter {
                         if (player.getGameMode().equals(GameMode.SPECTATOR)) {
                             return;
                         }
-                        if (operationsyncplugin.getKings().contains(player)) {
+                        if (operationsyncplugin.isKing(player)) {
+                            return;
+                        }
+                        if (!operationsyncplugin.shouldSync(player, king)) {
                             return;
                         }
                         PacketContainer packetContainer = operationsyncplugin.getProtocolManager().createPacket(PacketType.Play.Client.BLOCK_DIG);

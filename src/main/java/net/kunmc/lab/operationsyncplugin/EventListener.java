@@ -45,31 +45,17 @@ public class EventListener implements Listener {
         return true;
     }
 
-    private boolean shouldSync(Player player) {
-        if (isKing(player)) {
-            return false;
-        }
-        if (player.getGameMode().equals(GameMode.SPECTATOR)) {
-            return false;
-        }
-        return true;
-    }
-
-    private boolean isKing(Player player) {
-        return operationsyncplugin.getKings().contains(player);
-    }
-
     @EventHandler
     public void onKingSwapHandItemchange(PlayerSwapHandItemsEvent event) {
         Player player = event.getPlayer();
         if (!shouldHandle(player)) {
             return;
         }
-        if (!isKing(player)) {
+        if (!operationsyncplugin.isKing(player)) {
             return;
         }
         Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
-            if (!shouldSync(otherPlayer)) {
+            if (!operationsyncplugin.shouldSync(otherPlayer, player)) {
                 return;
             }
             ItemStack item2 = otherPlayer.getInventory().getItemInOffHand();
@@ -85,11 +71,11 @@ public class EventListener implements Listener {
         if (!shouldHandle(player)) {
             return;
         }
-        if (!isKing(player)) {
+        if (!operationsyncplugin.isKing(player)) {
             return;
         }
         Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
-            if (!shouldSync(otherPlayer)) {
+            if (!operationsyncplugin.shouldSync(otherPlayer, player)) {
                 return;
             }
             otherPlayer.getInventory().setHeldItemSlot(event.getNewSlot());
@@ -102,12 +88,12 @@ public class EventListener implements Listener {
         if (!shouldHandle(player)) {
             return;
         }
-        if (!isKing(player)) {
+        if (!operationsyncplugin.isKing(player)) {
             return;
         }
         int amount = event.getItemDrop().getItemStack().getAmount();
         Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
-            if (!shouldSync(otherPlayer)) {
+            if (!operationsyncplugin.shouldSync(otherPlayer, player)) {
                 return;
             }
             ItemStack itemStack = otherPlayer.getItemInHand();
@@ -135,11 +121,11 @@ public class EventListener implements Listener {
         if (!shouldHandle(player)) {
             return;
         }
-        if (!isKing(player)) {
+        if (!operationsyncplugin.isKing(player)) {
             return;
         }
         Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
-            if (!shouldSync(otherPlayer)) {
+            if (!operationsyncplugin.shouldSync(otherPlayer, player)) {
                 return;
             }
             Vector locDif = event.getTo().toVector().subtract(event.getFrom().toVector());
@@ -171,7 +157,7 @@ public class EventListener implements Listener {
         if (!shouldHandle(player)) {
             return;
         }
-        if (!isKing(player)) {
+        if (!operationsyncplugin.isKing(player)) {
             return;
         }
         if (player.isJumping()) {
@@ -183,7 +169,7 @@ public class EventListener implements Listener {
             return;
         }
         Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
-            if (!shouldSync(otherPlayer)) {
+            if (!operationsyncplugin.shouldSync(otherPlayer, player)) {
                 return;
             }
             if (!otherPlayer.isOnGround()) {
@@ -209,14 +195,14 @@ public class EventListener implements Listener {
         if (!shouldHandle(player)) {
             return;
         }
-        if (!isKing(player)) {
+        if (!operationsyncplugin.isKing(player)) {
             return;
         }
         if (!event.getHand().equals(EquipmentSlot.HAND)) {
             return;
         }
         Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
-            if (!shouldSync(otherPlayer)) {
+            if (!operationsyncplugin.shouldSync(otherPlayer, player)) {
                 return;
             }
             otherPlayer.swingMainHand();
@@ -237,14 +223,14 @@ public class EventListener implements Listener {
         if (!shouldHandle(player)) {
             return;
         }
-        if (!isKing(player)) {
+        if (!operationsyncplugin.isKing(player)) {
             return;
         }
         if (!event.getHand().equals(EquipmentSlot.HAND)) {
             return;
         }
         Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
-            if (!shouldSync(otherPlayer)) {
+            if (!operationsyncplugin.shouldSync(otherPlayer, player)) {
                 return;
             }
             if (!otherPlayer.getItemInHand().getType().isBlock()) {
@@ -267,11 +253,11 @@ public class EventListener implements Listener {
         if (!shouldHandle(player)) {
             return;
         }
-        if (!isKing(player)) {
+        if (!operationsyncplugin.isKing(player)) {
             return;
         }
         Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
-            if (!shouldSync(otherPlayer)) {
+            if (!operationsyncplugin.shouldSync(otherPlayer, player)) {
                 return;
             }
             if (event.isSneaking()) {
@@ -307,11 +293,11 @@ public class EventListener implements Listener {
         if (!shouldHandle(player)) {
             return;
         }
-        if (!isKing(player)) {
+        if (!operationsyncplugin.isKing(player)) {
             return;
         }
         Bukkit.getOnlinePlayers().forEach(otherPlayer -> {
-            if (!shouldSync(otherPlayer)) {
+            if (!operationsyncplugin.shouldSync(otherPlayer, player)) {
                 return;
             }
             if (event.isSprinting()) {
